@@ -2,17 +2,17 @@
 #
 # This file is part of TeaLeaf.
 #
-# TeaLeaf is free software: you can redistribute it and/or modify it under 
-# the terms of the GNU General Public License as published by the 
-# Free Software Foundation, either version 3 of the License, or (at your option) 
+# TeaLeaf is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
 #
-# TeaLeaf is distributed in the hope that it will be useful, but 
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+# TeaLeaf is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 # details.
 #
-# You should have received a copy of the GNU General Public License along with 
+# You should have received a copy of the GNU General Public License along with
 # TeaLeaf. If not, see http://www.gnu.org/licenses/.
 
 #  @brief Makefile for TeaLeaf
@@ -76,7 +76,7 @@ OMP_ARM       = -fopenmp
 
 FLAGS_INTEL     = -O3 -no-prec-div -fpp -align array64byte
 FLAGS_SUN       = -fast -xipo=2 -Xlistv4
-FLAGS_GNU       = -O3 -march=native -funroll-loops -cpp -ffree-line-length-none
+FLAGS_GNU       = -O3 -march=native -funroll-loops -cpp -ffree-line-length-none -shared
 FLAGS_CRAY      = -em -ra -h acc_model=fast_addr:no_deep_copy:auto_async_all
 FLAGS_PGI       = -fastsse -gopt -Mipa=fast -Mlist
 FLAGS_PATHSCALE = -O3
@@ -195,6 +195,18 @@ tea_leaf: Makefile $(KERNEL_FILES) $(FORTRAN_FILES) $(C_FILES)
 	-o tea_leaf
 	@echo $(MESSAGE)
 
+shared: Makefile $(KERNEL_FILES) $(FORTRAN_FILES) $(C_FILES)
+	$(MPI_COMPILER) \
+	$(FLAGS)	\
+	$(OMP_$(COMPILER)) $(OMP4) \
+	$(FORTRAN_FILES)	\
+	$(KERNEL_FILES) \
+	$(C_FILES)	\
+	$(LDFLAGS) \
+	$(LDLIBS) \
+	-shared -fPIC \
+	-o tea_leaf.so
+
 include makefile.deps
 
 %_module.mod: %.f90 %.o
@@ -207,4 +219,4 @@ include makefile.deps
 	$(C_MPI_COMPILER) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o *.mod *genmod* *.lst *.cub *.ptx tea_leaf *.s *.i
+	rm -vf *.o *.mod *genmod* *.lst *.cub *.ptx tea_leaf *.s *.i *.so
